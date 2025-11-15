@@ -2,7 +2,7 @@ import os
 from functools import lru_cache
 from typing import List, Optional
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
 # Load environment variables from .env if present
@@ -13,7 +13,8 @@ class Settings(BaseModel):
     """Application settings loaded from environment variables."""
     app_name: str = Field(default="Recipe & Meal Planner API", description="Application name")
     debug: bool = Field(default=os.getenv("DEBUG", "false").lower() == "true", description="Debug mode")
-    spoonacular_api_key: str = Field(..., description="Spoonacular API key from environment")
+    # Make API key optional so the app can start and expose health/basic endpoints without it
+    spoonacular_api_key: Optional[str] = Field(default=os.getenv("SPOONACULAR_API_KEY"), description="Spoonacular API key from environment")
     api_base_url: str = Field(default="https://api.spoonacular.com", description="Spoonacular API base URL")
     cors_allow_origins: List[str] = Field(
         default_factory=lambda: os.getenv("CORS_ALLOW_ORIGINS", "*").split(","),
@@ -41,13 +42,5 @@ class Settings(BaseModel):
 @lru_cache()
 def get_settings() -> Settings:
     """Return cached application settings loaded from the environment."""
-    try:
-        return Settings(spoonacular_api_key=os.getenv("SPOONACULAR_API_KEY", ""))
-    except ValidationError as e:
-        # Raise a clearer error when API key is missing
-        missing = []
-        if not os.getenv("SPOONACULAR_API_KEY"):
-            missing.append("SPOONACULAR_API_KEY")
-        raise RuntimeError(
-            f"Missing required environment variables: {', '.join(missing)}"
-        ) from e
+    # Do not raise if the API key is missing; endpoints that require it will handle errors gracefully.
+    return Settings()

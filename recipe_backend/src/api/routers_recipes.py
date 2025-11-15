@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from .spoonacular_client import SpoonacularClient, SpoonacularError
+from .spoonacular_client import SpoonacularError
 from .state import get_spoonacular_client
 
 router = APIRouter(prefix="/recipes", tags=["Recipes"])
@@ -23,7 +23,7 @@ async def search_recipes(
     q: str = Query(..., description="Search query"),
     number: int = Query(10, ge=1, le=50, description="Number of results to return"),
     diet: Optional[str] = Query(None, description="Dietary filter, e.g., vegetarian, vegan, keto"),
-    client: SpoonacularClient = Depends(get_spoonacular_client),
+    client=Depends(get_spoonacular_client),
 ):
     """Perform a recipe search with optional diet filter.
 
@@ -51,7 +51,7 @@ async def search_recipes(
 async def get_recipe_details(
     recipe_id: int,
     include_nutrition: bool = Query(False, description="Include nutrition data in the response"),
-    client: SpoonacularClient = Depends(get_spoonacular_client),
+    client=Depends(get_spoonacular_client),
 ):
     """Get recipe information from Spoonacular and return JSON payload.
 
@@ -78,7 +78,7 @@ async def get_recipe_details(
 )
 async def get_recipe_nutrition(
     recipe_id: int,
-    client: SpoonacularClient = Depends(get_spoonacular_client),
+    client=Depends(get_spoonacular_client),
 ):
     """Get nutrition widget JSON from Spoonacular for a recipe and return JSON payload.
 

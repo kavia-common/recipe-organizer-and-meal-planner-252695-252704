@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from .spoonacular_client import SpoonacularClient, SpoonacularError
+from .spoonacular_client import SpoonacularError
 from .state import get_spoonacular_client
 
 router = APIRouter(prefix="/mealplan", tags=["Meal Plan"])
@@ -24,7 +24,7 @@ async def generate_meal_plan(
     target_calories: Optional[int] = Query(None, ge=800, le=5000, description="Target daily calories"),
     diet: Optional[str] = Query(None, description="Dietary preference (e.g., vegetarian, keto)"),
     exclude: Optional[str] = Query(None, description="Comma-separated ingredients to exclude"),
-    client: SpoonacularClient = Depends(get_spoonacular_client),
+    client=Depends(get_spoonacular_client),
 ):
     """Generate a meal plan using Spoonacular's mealplanner/generate endpoint and return JSON payload.
 

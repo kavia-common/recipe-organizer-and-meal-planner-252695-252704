@@ -26,7 +26,11 @@ async def generate_meal_plan(
     exclude: Optional[str] = Query(None, description="Comma-separated ingredients to exclude"),
     client: SpoonacularClient = Depends(get_spoonacular_client),
 ) -> Dict[str, Any]:
-    """Generate a meal plan using Spoonacular's mealplanner/generate endpoint."""
+    """Generate a meal plan using Spoonacular's mealplanner/generate endpoint.
+
+    Returns:
+        Dict[str, Any]: JSON object of the generated meal plan as returned by Spoonacular.
+    """
     try:
         return await client.generate_meal_plan(
             time_frame=time_frame, target_calories=target_calories, diet=diet, exclude=exclude

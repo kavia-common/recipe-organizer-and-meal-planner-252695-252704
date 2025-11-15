@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -30,7 +30,7 @@ class SearchResponse(BaseModel):
     "/search",
     summary="Search recipes",
     description="Search for recipes using Spoonacular's complexSearch endpoint.",
-    response_model=SearchResponse,
+    # Avoid binding response_model to prevent FastAPI from coercing on nested/unknown shapes
     responses={
         200: {"description": "Recipes returned"},
         400: {"description": "Invalid parameters"},
@@ -42,17 +42,16 @@ async def search_recipes(
     number: int = Query(10, ge=1, le=50, description="Number of results to return"),
     diet: Optional[str] = Query(None, description="Dietary filter, e.g., vegetarian, vegan, keto"),
     client: SpoonacularClient = Depends(get_spoonacular_client),
-) -> SearchResponse:
+) -> Dict[str, Any]:
     """
     Perform a recipe search with optional diet filter.
 
     Returns:
-        SearchResponse: Spoonacular complexSearch payload coerced into the SearchResponse model.
+        Dict[str, Any]: Spoonacular complexSearch payload passthrough.
     """
     try:
         data = await client.search_recipes(query=q, number=number, diet=diet)
-        # Coerce incoming JSON into typed response. Unknown fields in results are ignored.
-        return SearchResponse(**data)
+        return data
     except SpoonacularError as e:
         raise HTTPException(status_code=502, detail={"message": str(e), "upstream_status": e.status_code})
 
@@ -62,7 +61,6 @@ async def search_recipes(
     "/{recipe_id}",
     summary="Get recipe details",
     description="Fetch detailed information of a recipe by ID.",
-    response_model=None,
     responses={
         200: {"description": "Recipe information"},
         404: {"description": "Recipe not found"},
@@ -73,11 +71,11 @@ async def get_recipe_details(
     recipe_id: int,
     include_nutrition: bool = Query(False, description="Include nutrition data in the response"),
     client: SpoonacularClient = Depends(get_spoonacular_client),
-) -> dict:
+) -> Dict[str, Any]:
     """Get recipe information from Spoonacular.
 
     Returns:
-        dict: JSON object representing the recipe information returned by Spoonacular.
+        Dict[str, Any]: JSON object representing the recipe information returned by Spoonacular.
     """
     try:
         return await client.get_recipe_information(recipe_id, include_nutrition=include_nutrition)
@@ -91,7 +89,6 @@ async def get_recipe_details(
     "/{recipe_id}/nutrition",
     summary="Get recipe nutrition",
     description="Fetch nutrition widget data for a recipe.",
-    response_model=None,
     responses={
         200: {"description": "Nutrition widget JSON"},
         404: {"description": "Recipe not found"},
@@ -101,11 +98,11 @@ async def get_recipe_details(
 async def get_recipe_nutrition(
     recipe_id: int,
     client: SpoonacularClient = Depends(get_spoonacular_client),
-) -> dict:
+) -> Dict[str, Any]:
     """Get nutrition widget JSON from Spoonacular for a recipe.
 
     Returns:
-        dict: JSON object representing the nutrition widget data returned by Spoonacular.
+        Dict[str, Any]: JSON object representing the nutrition widget data returned by Spoonacular.
     """
     try:
         return await client.get_recipe_nutrition(recipe_id)

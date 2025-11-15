@@ -4,10 +4,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
-from .routers_recipes import router as recipes_router
-from .routers_mealplan import router as mealplan_router
-from .spoonacular_client import SpoonacularClient
-from .state import set_spoonacular_client
 
 settings = get_settings()
 
@@ -33,6 +29,18 @@ app.add_middleware(
     allow_headers=[h.strip() for h in settings.cors_allow_headers] if settings.cors_allow_headers else ["*"],
 )
 
+# PUBLIC_INTERFACE
+@app.get("/", tags=["Health"], summary="Health Check")
+def health_check() -> Dict[str, str]:
+    """Health check endpoint to verify service is running."""
+    return {"message": "Healthy"}
+
+# Import and include routers after health endpoint so the app can boot without them if they error.
+from .spoonacular_client import SpoonacularClient
+from .state import set_spoonacular_client
+from .routers_recipes import router as recipes_router
+from .routers_mealplan import router as mealplan_router
+
 
 @app.on_event("startup")
 async def on_startup() -> None:
@@ -51,14 +59,6 @@ async def on_shutdown() -> None:
     if client is not None:
         await client.shutdown()
 
-
 # Routers
 app.include_router(recipes_router)
 app.include_router(mealplan_router)
-
-
-# PUBLIC_INTERFACE
-@app.get("/", tags=["Health"], summary="Health Check")
-def health_check() -> Dict[str, str]:
-    """Health check endpoint to verify service is running."""
-    return {"message": "Healthy"}

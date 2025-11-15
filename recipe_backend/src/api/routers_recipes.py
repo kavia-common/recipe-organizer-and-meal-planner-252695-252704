@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -42,7 +42,7 @@ async def search_recipes(
     number: int = Query(10, ge=1, le=50, description="Number of results to return"),
     diet: Optional[str] = Query(None, description="Dietary filter, e.g., vegetarian, vegan, keto"),
     client: SpoonacularClient = Depends(get_spoonacular_client),
-) -> SearchResponse:
+):
     """
     Perform a recipe search with optional diet filter.
     Returns Spoonacular complexSearch payload coerced into SearchResponse.
@@ -60,6 +60,7 @@ async def search_recipes(
     "/{recipe_id}",
     summary="Get recipe details",
     description="Fetch detailed information of a recipe by ID.",
+    response_model=None,
     responses={
         200: {"description": "Recipe information"},
         404: {"description": "Recipe not found"},
@@ -70,7 +71,7 @@ async def get_recipe_details(
     recipe_id: int,
     include_nutrition: bool = Query(False, description="Include nutrition data in the response"),
     client: SpoonacularClient = Depends(get_spoonacular_client),
-) -> Dict[str, Any]:
+):
     """Get recipe information from Spoonacular."""
     try:
         return await client.get_recipe_information(recipe_id, include_nutrition=include_nutrition)
@@ -84,6 +85,7 @@ async def get_recipe_details(
     "/{recipe_id}/nutrition",
     summary="Get recipe nutrition",
     description="Fetch nutrition widget data for a recipe.",
+    response_model=None,
     responses={
         200: {"description": "Nutrition widget JSON"},
         404: {"description": "Recipe not found"},
@@ -93,7 +95,7 @@ async def get_recipe_details(
 async def get_recipe_nutrition(
     recipe_id: int,
     client: SpoonacularClient = Depends(get_spoonacular_client),
-) -> Dict[str, Any]:
+):
     """Get nutrition widget JSON from Spoonacular for a recipe."""
     try:
         return await client.get_recipe_nutrition(recipe_id)

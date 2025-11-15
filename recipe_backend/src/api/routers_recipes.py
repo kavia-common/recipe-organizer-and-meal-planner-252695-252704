@@ -27,7 +27,8 @@ async def search_recipes(
 ):
     """Perform a recipe search with optional diet filter.
 
-    Returns a plain JSON-serializable dictionary passthrough from Spoonacular.
+    Returns:
+        dict: JSON-serializable payload proxied from Spoonacular.
     """
     try:
         data = await client.search_recipes(query=q, number=number, diet=diet)
@@ -52,7 +53,11 @@ async def get_recipe_details(
     include_nutrition: bool = Query(False, description="Include nutrition data in the response"),
     client: SpoonacularClient = Depends(get_spoonacular_client),
 ):
-    """Get recipe information from Spoonacular and return JSON payload."""
+    """Get recipe information from Spoonacular and return JSON payload.
+
+    Returns:
+        dict: JSON object with recipe details from Spoonacular.
+    """
     try:
         return await client.get_recipe_information(recipe_id, include_nutrition=include_nutrition)
     except SpoonacularError as e:
@@ -75,7 +80,11 @@ async def get_recipe_nutrition(
     recipe_id: int,
     client: SpoonacularClient = Depends(get_spoonacular_client),
 ):
-    """Get nutrition widget JSON from Spoonacular for a recipe and return JSON payload."""
+    """Get nutrition widget JSON from Spoonacular for a recipe and return JSON payload.
+
+    Returns:
+        dict: Nutrition widget JSON from Spoonacular.
+    """
     try:
         return await client.get_recipe_nutrition(recipe_id)
     except SpoonacularError as e:

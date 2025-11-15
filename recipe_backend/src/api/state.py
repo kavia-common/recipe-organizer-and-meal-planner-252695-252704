@@ -1,4 +1,4 @@
-from typing import cast, Optional
+from typing import Any, Optional, cast
 
 from fastapi import HTTPException
 from starlette.requests import Request
@@ -9,7 +9,7 @@ from .spoonacular_client import SpoonacularClient
 SPOONACULAR_CLIENT_KEY = "spoonacular_client"
 
 
-def set_spoonacular_client(app, client: SpoonacularClient) -> None:
+def set_spoonacular_client(app: Any, client: SpoonacularClient) -> None:
     """Attach the Spoonacular client to app state."""
     app.state.__setattr__(SPOONACULAR_CLIENT_KEY, client)
 

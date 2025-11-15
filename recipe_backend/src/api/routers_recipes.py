@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -9,11 +9,20 @@ from .state import get_spoonacular_client
 router = APIRouter(prefix="/recipes", tags=["Recipes"])
 
 
+class RecipeSummary(BaseModel):
+    """Minimal recipe summary for search results."""
+    id: int = Field(..., description="Recipe ID")
+    title: str = Field(..., description="Recipe title")
+    image: Optional[str] = Field(default=None, description="Image URL")
+    imageType: Optional[str] = Field(default=None, description="Image type/extension")
+
+
 class SearchResponse(BaseModel):
-    results: Any = Field(..., description="Search results from Spoonacular")
-    offset: Optional[int] = Field(default=None)
-    number: Optional[int] = Field(default=None)
-    totalResults: Optional[int] = Field(default=None)
+    """Response shape for Spoonacular complexSearch proxy."""
+    results: List[RecipeSummary] = Field(default_factory=list, description="Recipe summaries")
+    offset: Optional[int] = Field(default=None, description="Pagination offset")
+    number: Optional[int] = Field(default=None, description="Number of results returned")
+    totalResults: Optional[int] = Field(default=None, description="Total matching results")
 
 
 # PUBLIC_INTERFACE
@@ -36,10 +45,11 @@ async def search_recipes(
 ) -> SearchResponse:
     """
     Perform a recipe search with optional diet filter.
-    Returns Spoonacular complexSearch payload.
+    Returns Spoonacular complexSearch payload coerced into SearchResponse.
     """
     try:
         data = await client.search_recipes(query=q, number=number, diet=diet)
+        # Coerce incoming JSON into typed response. Unknown fields in results are ignored.
         return SearchResponse(**data)
     except SpoonacularError as e:
         raise HTTPException(status_code=502, detail={"message": str(e), "upstream_status": e.status_code})

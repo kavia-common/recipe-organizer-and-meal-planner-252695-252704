@@ -1,7 +1,6 @@
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
 
 from .spoonacular_client import SpoonacularClient, SpoonacularError
 from .state import get_spoonacular_client
@@ -9,28 +8,11 @@ from .state import get_spoonacular_client
 router = APIRouter(prefix="/recipes", tags=["Recipes"])
 
 
-class RecipeSummary(BaseModel):
-    """Minimal recipe summary for search results."""
-    id: int = Field(..., description="Recipe ID")
-    title: str = Field(..., description="Recipe title")
-    image: Optional[str] = Field(default=None, description="Image URL")
-    imageType: Optional[str] = Field(default=None, description="Image type/extension")
-
-
-class SearchResponse(BaseModel):
-    """Response shape for Spoonacular complexSearch proxy."""
-    results: List[RecipeSummary] = Field(default_factory=list, description="Recipe summaries")
-    offset: Optional[int] = Field(default=None, description="Pagination offset")
-    number: Optional[int] = Field(default=None, description="Number of results returned")
-    totalResults: Optional[int] = Field(default=None, description="Total matching results")
-
-
 # PUBLIC_INTERFACE
 @router.get(
     "/search",
     summary="Search recipes",
     description="Search for recipes using Spoonacular's complexSearch endpoint.",
-    # Avoid binding response_model to prevent FastAPI from coercing on nested/unknown shapes
     responses={
         200: {"description": "Recipes returned"},
         400: {"description": "Invalid parameters"},
@@ -42,12 +24,10 @@ async def search_recipes(
     number: int = Query(10, ge=1, le=50, description="Number of results to return"),
     diet: Optional[str] = Query(None, description="Dietary filter, e.g., vegetarian, vegan, keto"),
     client: SpoonacularClient = Depends(get_spoonacular_client),
-) -> Dict[str, Any]:
-    """
-    Perform a recipe search with optional diet filter.
+):
+    """Perform a recipe search with optional diet filter.
 
-    Returns:
-        Dict[str, Any]: Spoonacular complexSearch payload passthrough.
+    Returns a JSON-serializable dictionary passthrough from Spoonacular.
     """
     try:
         data = await client.search_recipes(query=q, number=number, diet=diet)
@@ -71,12 +51,8 @@ async def get_recipe_details(
     recipe_id: int,
     include_nutrition: bool = Query(False, description="Include nutrition data in the response"),
     client: SpoonacularClient = Depends(get_spoonacular_client),
-) -> Dict[str, Any]:
-    """Get recipe information from Spoonacular.
-
-    Returns:
-        Dict[str, Any]: JSON object representing the recipe information returned by Spoonacular.
-    """
+):
+    """Get recipe information from Spoonacular and return JSON payload."""
     try:
         return await client.get_recipe_information(recipe_id, include_nutrition=include_nutrition)
     except SpoonacularError as e:
@@ -98,12 +74,8 @@ async def get_recipe_details(
 async def get_recipe_nutrition(
     recipe_id: int,
     client: SpoonacularClient = Depends(get_spoonacular_client),
-) -> Dict[str, Any]:
-    """Get nutrition widget JSON from Spoonacular for a recipe.
-
-    Returns:
-        Dict[str, Any]: JSON object representing the nutrition widget data returned by Spoonacular.
-    """
+):
+    """Get nutrition widget JSON from Spoonacular for a recipe and return JSON payload."""
     try:
         return await client.get_recipe_nutrition(recipe_id)
     except SpoonacularError as e:

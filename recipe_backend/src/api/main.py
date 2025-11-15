@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Optional
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,7 +31,7 @@ app.add_middleware(
 
 # PUBLIC_INTERFACE
 @app.get("/", tags=["Health"], summary="Health Check")
-def health_check() -> Dict[str, str]:
+def health_check():
     """Health check endpoint to verify service is running."""
     return {"message": "Healthy"}
 

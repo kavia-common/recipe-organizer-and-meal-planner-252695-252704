@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -25,12 +25,8 @@ async def generate_meal_plan(
     diet: Optional[str] = Query(None, description="Dietary preference (e.g., vegetarian, keto)"),
     exclude: Optional[str] = Query(None, description="Comma-separated ingredients to exclude"),
     client: SpoonacularClient = Depends(get_spoonacular_client),
-) -> Dict[str, Any]:
-    """Generate a meal plan using Spoonacular's mealplanner/generate endpoint.
-
-    Returns:
-        Dict[str, Any]: JSON object of the generated meal plan as returned by Spoonacular.
-    """
+):
+    """Generate a meal plan using Spoonacular's mealplanner/generate endpoint and return JSON payload."""
     try:
         return await client.generate_meal_plan(
             time_frame=time_frame, target_calories=target_calories, diet=diet, exclude=exclude
